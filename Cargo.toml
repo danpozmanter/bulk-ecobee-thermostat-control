@@ -1,5 +1,5 @@
 [package]
-name = "bulk_ecobee_thermostat_control"
+name = "bulk-ecobee-thermostat-control"
 version = "0.0.1"
 edition = "2021"
 

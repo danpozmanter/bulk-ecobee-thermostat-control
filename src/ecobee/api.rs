@@ -47,10 +47,10 @@ pub fn authorize() {
 /// 
 /// API params:
 /// 
-/// grant_type	This is always "ecobeePin" for this authorization flow.
-/// code	    The authorization code obtained from the /authorize request.
-/// client_id	This is your unique application key.
-/// ecobee_type	(Deprecated)
+/// grant_type  This is always "ecobeePin" for this authorization flow.
+/// code        The authorization code obtained from the /authorize request.
+/// client_id   This is your unique application key.
+/// ecobee_type (Deprecated)
 pub fn fetch_tokens(access_token: String, grant_type: &str) {
 
     let app_key = storage::load_app_key();

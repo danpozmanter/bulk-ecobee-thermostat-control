@@ -2,11 +2,11 @@ use serde::{Deserialize};
 
 /// # AuthorizeResponse
 /// 
-/// ecobeePin	The PIN a user enters in the web portal.
-/// expires_in	The number of minutes until the PIN expires. Ensure you inform the user how much time they have.
-/// code	The authorization token needed to request the access and refresh tokens.
-/// scope	The requested Scope from the original request. This must match the original request.
-/// interval	The minimum amount of seconds which must pass between polling attempts for a token. */
+/// ecobeePin   The PIN a user enters in the web portal.
+/// expires_in  The number of minutes until the PIN expires. Ensure you inform the user how much time they have.
+/// code        The authorization token needed to request the access and refresh tokens.
+/// scope       The requested Scope from the original request. This must match the original request.
+/// interval    The minimum amount of seconds which must pass between polling attempts for a token. */
 #[derive(Deserialize, Debug)]
 pub struct AuthorizeResponse {
     #[serde(rename="ecobeePin")]

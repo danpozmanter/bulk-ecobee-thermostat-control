@@ -23,7 +23,6 @@ pub fn authorize() {
             match response.into_json::<models::AuthorizeResponse>() {
                 Ok(auth) => {
                     // Write the auth token.
-                    // Typically this expires in 3599 minutes, or just under 60 hours.
                     storage::write_tokens(auth.code, "".to_string());
                     println!("Ecobee Authorization PIN: {}", auth.ecobee_pin);
                     println!("(expires in {} minutes)", auth.expires_in);

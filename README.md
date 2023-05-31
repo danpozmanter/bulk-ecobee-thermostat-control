@@ -114,6 +114,9 @@ For this reason, I have built the refresh step as a manual one.
 * The status command doesn't handle pagination. I'm not sure how practical a need there is here. The Go client doesn't implement this either.
 The API allows for it however.
 
+* Potential Ecobee API Bug: The API will sometimes report success, but one or more thermostats may not actually change over. The mobile app will report the thermostat in the desired state,
+but the thermostat itself will report it's previous state.
+
 ### Further Exploration
 
 For a more general purpose implementation and reference, here is [Go-Ecobee](https://github.com/rspier/go-ecobee)

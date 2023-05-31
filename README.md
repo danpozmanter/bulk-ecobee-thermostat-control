@@ -96,8 +96,8 @@ This tool pairs well with `cron`, `at`, or another scheduling tool.
 For example:
 
 ```bash
-echo "thermoctl --heat" | at midnight
-echo "thermoctl -r --cool" | at 10am
+echo "thermoctl --heat >> ~/logs/ecobee.log" | at midnight
+echo "thermoctl -r --cool >> ~/logs/ecobee.log" | at 10am
 ```
 
 ### General Notes
@@ -114,8 +114,8 @@ For this reason, I have built the refresh step as a manual one.
 * The status command doesn't handle pagination. I'm not sure how practical a need there is here. The Go client doesn't implement this either.
 The API allows for it however.
 
-* Potential Ecobee API Bug: The API will sometimes report success, but one or more thermostats may not actually change over. The mobile app will report the thermostat in the desired state,
-but the thermostat itself will report it's previous state.
+* The API will sometimes report success, but one or more thermostats may not actually change over. The mobile app will report the thermostat in the desired state,
+but the thermostat itself will report it's previous state. This could be a bug, or it could be a result of a network error if one or more of the thermostats temporarily lose their wifi connection.
 
 ### Further Exploration
 

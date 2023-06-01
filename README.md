@@ -25,34 +25,44 @@ Clone this repo, and run `cargo build --release`.
 Move the resulting binary to the directory of your choice (eg "~/bin"),
 and optionally alias or rename (eg to `thermoctl`).
 
-### Ecobee Developer and API/APP Key
+### Ecobee Developer and API Key
+
+
+### Setup - Authorization and Access Tokens
+
+The initial access code, and then the access and refresh tokens, are stored in ".ecobee_bulk_thermostat_control/api_tokens" in your HOME directory.
+
+#### Step 1
 
 Become an [Ecobee Developer](https://www.ecobee.com/en-us/developers/).
 
 Log into your [Consumer Portal](https://www.ecobee.com/consumerportal/) and navigate the menu to "Developer" and create a new app with an associated key.
-Copy this key into your HOME directory, in a file named ".ecobee_api_key".
 
-### Authorization and Access Tokens
+Run
 
-The initial access code, and then the access and refresh tokens, are stored in ".ecobee_api_tokens" in your HOME directory.
+```bash
+thermoctl --apikey
+```
 
-#### Step 1
+And enter your API key from your newly created app.
 
-Request an authorization PIN by running the `--auth` command.
+#### Step 2
+
+Request an authorization PIN by running the `--pin` command.
 Once received, you will have until "expires_in" is up to enter it into the Ecobee portal to register the app.
 This step also authorizes the app (and may be needed if the request and refresh tokens expire).
 
 ```bash
-thermoctl --auth
+thermoctl --pin
 ```
 
-#### Step 2
+#### Step 3
 
 Before the temporary access code expires (usually short, as in 9 minutes), run the following to get
-an access token and a refresh token.
+an access token and a refresh token, as well as complete set up.
 
 ```bash
-thermoctl --authtoken
+thermoctl --auth
 ```
 
 #### Refresh
@@ -73,6 +83,8 @@ Can be used with other commands. Will always execute after refresh, and before a
 as I will get a failure notice for an hvac mode change only to see it take effect a second later).
 
 Displays the name, identifier, hvac mode, and current temperature and humidity for each thermostat.
+
+Status also refreshes the local store of thermostat names and identifiers. If you add or remove a thermostat, call status before calling update.
 
 ```bash
 thermoctl --status
@@ -114,8 +126,10 @@ For this reason, I have built the refresh step as a manual one.
 * The status command doesn't handle pagination. I'm not sure how practical a need there is here. The Go client doesn't implement this either.
 The API allows for it however.
 
-* The API will sometimes report success, but one or more thermostats may not actually change over. The mobile app will report the thermostat in the desired state,
-but the thermostat itself will report it's previous state. This could be a bug, or it could be a result of a network error if one or more of the thermostats temporarily lose their wifi connection.
+* The API allows for bulk updates, but in practice some thermostats may not change (and may falsley report their status to this app and the mobile app).
+To get around this, thermostat identifiers are used to make individual calls to each thermostat. This successfully bypasses the issue,
+at the cost of additional API calls. (A previous version made a single bulk call - which inevitably left some thermostats changed, and some unchanged but reporting they had
+changed in the app. The thermostat itself had the correct setting displayed).
 
 ### Further Exploration
 

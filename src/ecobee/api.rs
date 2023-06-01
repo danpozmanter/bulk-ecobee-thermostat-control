@@ -1,9 +1,14 @@
+use std::str::FromStr;
+
 use serde_json::Value;
 use ureq;
 use ureq::Error;
 
 use crate::ecobee::models;
 use crate::ecobee::storage;
+use crate::ecobee::storage::write_thermostats;
+
+use super::storage::load_thermostats;
 
 /// # authorize()
 /// 
@@ -109,6 +114,7 @@ pub fn refresh_tokens() {
 /// # thermostat_status()
 /// 
 /// For every registered thermostat, get the name, identifier, HVAC Mode, Actual Temperature, and Actual Humidity.
+/// Refresh a local store with thermostat identifiers and names for use with the update function.
 /// 
 /// https://www.ecobee.com/home/developer/api/documentation/v1/operations/get-thermostats.shtml
 pub fn thermostat_status() {
@@ -125,12 +131,19 @@ pub fn thermostat_status() {
                         println!("=========================================");
                         println!("Thermostats");
                         println!("=========================================");
+                        let mut thermostats_meta_vec: Vec<models::ThermostatMeta> = vec![];
                         for thermostat in thermostats {
+                            let thermostat_meta = models::ThermostatMeta {
+                                identifier: String::from_str(thermostat["identifier"].as_str().unwrap()).unwrap(),
+                                name: String::from_str(thermostat["name"].as_str().unwrap()).unwrap()
+                            };
+                            thermostats_meta_vec.push(thermostat_meta);
                             println!("Thermostat {} (id: {})", thermostat["name"], thermostat["identifier"]);
                             println!("HVAC Mode: {}", thermostat["settings"]["hvacMode"]);
                             let temp = thermostat["runtime"]["actualTemperature"].as_f64().unwrap() / 10.0;
                             println!("Actual Temperature: {}, Actual Humidity: {}%\n", temp, thermostat["runtime"]["actualHumidity"]);
                         }
+                        write_thermostats(thermostats_meta_vec);
                         println!("=========================================");
                     }
                 },
@@ -149,36 +162,46 @@ pub fn thermostat_status() {
 /// 
 /// For every registered thermostat, set the HVAC Mode to the provided string `mode`.
 /// 
+/// The API technically allows doing this in a single call, but in practice that often fails for some of the thermostats.
+/// (Leaving them reporting one state over wifi, and the actual state on the device itself).
+/// Breaking it into one call per thermostat bypasses this issue.
+/// 
+/// Note: Depending on the frequency with which this is called and number of thermostats - be wary of too many calls to the API.
+/// 
 /// https://www.ecobee.com/home/developer/api/documentation/v1/operations/post-update-thermostats.shtml
 pub fn update_thermostats(mode: &str) {
     let tokens = storage::load_tokens();
     let access = format!("Bearer {}", tokens.access_token.as_str());
-    match ureq::post("https://api.ecobee.com/1/thermostat")
-    .set("Content-Type", "application/json;charset=UTF-8")
-    .set("Authorization", access.as_str())    
-    .query("format", "json").send_json(ureq::json!({
-        "selection": {
-            "selectionType": "registered",
-            "selectionMatch": "",
-        },
-        "thermostat": {
-            "settings": {
-                "hvacMode": mode
+    let thermostats = load_thermostats();
+    for thermostat in thermostats {
+        println!("Updating {} to {mode}", thermostat.name);
+        match ureq::post("https://api.ecobee.com/1/thermostat")
+        .set("Content-Type", "application/json;charset=UTF-8")
+        .set("Authorization", access.as_str())    
+        .query("format", "json").send_json(ureq::json!({
+            "selection": {
+                "selectionType": "thermostats",
+                "selectionMatch": thermostat.identifier,
+            },
+            "thermostat": {
+                "settings": {
+                    "hvacMode": mode
+                }
             }
+        })) {
+            Ok(response) => {
+                match response.into_string() {
+                    Ok(resp) => {
+                        println!("{resp}");
+                    },
+                    Err(e) => println!("{e:?}")
+                };
+            },
+            Err(Error::Status(code, response)) => {
+                println!("Error with request for thermostats: {}\n{}", code, response.into_string().unwrap());
+            }
+            Err(e) => { println!("Transport error: {e}") }
         }
-    })) {
-        Ok(response) => {
-            match response.into_string() {
-                Ok(resp) => {
-                    println!("{resp}");
-                },
-                Err(e) => println!("{e:?}")
-            };
-        },
-        Err(Error::Status(code, response)) => {
-            println!("Error with request for thermostats: {}\n{}", code, response.into_string().unwrap());
-        }
-        Err(e) => { println!("Transport error: {e}") }
     }
 
 }

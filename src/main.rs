@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::io;
 
 mod ecobee;
 
@@ -12,10 +13,13 @@ mod ecobee;
 #[command(author, version, about, long_about = None)]
 struct Args {
     #[arg(long, exclusive=true)]
-    auth: bool,
+    apikey: bool,
+    
+    #[arg(long, exclusive=true)]
+    pin: bool,
 
     #[arg(long, exclusive=true)]
-    authtoken: bool,
+    auth: bool,
 
     #[arg(short, long)]
     refresh: bool,
@@ -36,15 +40,37 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    // Handle authorization or authtoken first.
+    // Handle setup first,
 
-    if args.auth {
+    // Setup Step 1
+    if args.apikey {
+        // Get the API Key from the user, and store it locally for future use.
+        // Create the configuration directory if it doesn't yet exist (silently).
+        println!("Enter your API Key from the Developer section of the Ecobee consumer portal: ");
+        let mut api_key = String::new();
+        io::stdin().read_line(&mut api_key).unwrap();
+        api_key.truncate(api_key.len() - 1);
+        println!("You entered {api_key}\nProceed? (y/n)");
+        let mut answer = String::new();
+        io::stdin().read_line(&mut answer).unwrap();
+        answer.truncate(answer.len() - 1);
+        if answer == "y" {
+            ecobee::storage::create_config_dir();
+            ecobee::storage::write_api_key(api_key);
+        }
+        return
+    }
+
+    // Setup Step 2
+    if args.pin {
         ecobee::api::authorize();
         return
     }
 
-    if args.authtoken {
+    // Setup Step 3
+    if args.auth {
         ecobee::api::get_tokens_with_code();
+        ecobee::api::thermostat_status(); // Get status, and refresh thermostat data locally.
         return
     }
 

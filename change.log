@@ -1,0 +1,6 @@
+0.1.0
+Setup: --auth and --authtoken -> --pin and --auth.
+Added new step 1 (--apikey) to initialize, and create the config directory.
+Status now stores identifiers and names for all thermostats.
+Status is now called automatically after step 2 of setup.
+Fix: Update now uses one call per thermostat to get around an API bug.

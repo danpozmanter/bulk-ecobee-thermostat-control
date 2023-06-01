@@ -1,4 +1,4 @@
-use serde::{Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// # AuthorizeResponse
 /// 
@@ -38,8 +38,18 @@ pub struct TokenResponse {
 
 /// # Tokens
 /// 
-/// (Convenience struct to pass both access and refresh tokens around).
+/// Convenience struct to pass both access and refresh tokens around.
 pub struct Tokens {
     pub access_token: String,
-    pub refresh_token: String,
+    pub refresh_token: String
+}
+
+/// # ThermostatMeta
+/// 
+/// For storing/retrieving basic thermostat metadata (identifier and name).
+#[derive(Deserialize, Debug, Serialize)]
+pub struct ThermostatMeta {
+
+    pub identifier: String,
+    pub name: String
 }

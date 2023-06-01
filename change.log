@@ -1,3 +1,7 @@
+0.1.1
+Silence thermostat metadata storage.
+Fix error message for thermostat metadata storage.
+
 0.1.0
 Setup: --auth and --authtoken -> --pin and --auth.
 Added new step 1 (--apikey) to initialize, and create the config directory.

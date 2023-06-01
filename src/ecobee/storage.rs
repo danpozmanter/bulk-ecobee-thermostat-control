@@ -144,11 +144,11 @@ pub fn write_thermostats(thermostats: Vec<ThermostatMeta>) {
         Ok(mut f) => {
             println!("{}", serde_yaml::to_string(&thermostats).unwrap());
             match write!(f, "{}", serde_yaml::to_string(&thermostats).unwrap()) {
-                Ok(_) => println!("Successfully wrote thermostat metadata."),
+                Ok(_) => (),
                 Err(e) => panic!("Error writing thermostat metadata {:?}", e.to_string())
             }
         },
-        Err(e) => panic!("Error writing access tokens {:?}", e.to_string())
+        Err(e) => panic!("Error writing thermostat metadata {:?}", e.to_string())
     }
 }
 

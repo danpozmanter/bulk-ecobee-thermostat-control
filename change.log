@@ -1,3 +1,6 @@
+0.1.2
+Remove lingering debugging output.
+
 0.1.1
 Silence thermostat metadata storage.
 Fix error message for thermostat metadata storage.

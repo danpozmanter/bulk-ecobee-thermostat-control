@@ -142,7 +142,6 @@ pub fn write_thermostats(thermostats: Vec<ThermostatMeta>) {
         .open(get_config_file_path(THERMOSTATS_FILENAME));
     match file {
         Ok(mut f) => {
-            println!("{}", serde_yaml::to_string(&thermostats).unwrap());
             match write!(f, "{}", serde_yaml::to_string(&thermostats).unwrap()) {
                 Ok(_) => (),
                 Err(e) => panic!("Error writing thermostat metadata {:?}", e.to_string())

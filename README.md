@@ -18,6 +18,8 @@ In combination with a scheduling tool like `at`, `cron`, or similar, it's easy t
 
 * [Home](https://crates.io/crates/home) - Cross platform friendly home directory.
 
+* [Chrono](https://github.com/chronotope/chrono) - Date and time library for Rust.
+
 ### Setup and Installation
 
 Clone this repo, and run `cargo build --release`.

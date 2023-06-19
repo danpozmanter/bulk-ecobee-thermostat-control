@@ -163,7 +163,7 @@ pub fn write_tokens(access_token: String, refresh_token: String) {
     match file {
         Ok(mut f) => {
             match write!(f, "{access_token}\n{refresh_token}") {
-                Ok(_) => println!("Successfully wrote access tokens:\nAccess: {access_token}\nRefresh: {refresh_token}"),
+                Ok(_) => (),
                 Err(e) => panic!("Error writing access tokens {:?}", e.to_string())
             }
         },

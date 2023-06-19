@@ -1,4 +1,5 @@
 use clap::Parser;
+use chrono;
 use std::io;
 
 mod ecobee;
@@ -39,6 +40,8 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
+
+    println!("Bulk Ecobee Thermostat Control Run @ {}", chrono::offset::Local::now().to_rfc2822());
 
     // Handle setup first,
 

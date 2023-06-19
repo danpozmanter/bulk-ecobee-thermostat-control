@@ -105,7 +105,7 @@ pub fn get_tokens_with_code() {
 pub fn refresh_tokens() {
     let tokens = storage::load_tokens();
 
-    println!("Refreshing with '{}'", tokens.refresh_token);
+    println!("Refreshing tokens.");
 
     fetch_tokens(tokens.refresh_token, "refresh_token");
 }

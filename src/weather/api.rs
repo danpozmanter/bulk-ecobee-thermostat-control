@@ -1,0 +1,76 @@
+use chrono;
+use core::panic;
+use std::{thread, time};
+use serde_json::Value;
+use ureq;
+use ureq::Error;
+use crate::storage;
+use crate::ecobee;
+
+/// # run()
+/// 
+/// Run weather mode in an infinite loop (until broken by user input).
+/// 
+/// Apply a change if the temperature is above or below thresholds specified during weather setup, otherwise continue doing nothing.
+pub fn run() {
+    let weather_settings = storage::load_weather_settings();
+    if weather_settings.interval.is_none() {
+        panic!("Interval is not set. Run --weathersetup before proceeding.");
+    }
+    let duration = time::Duration::from_secs(weather_settings.interval.unwrap() * 60);
+    ecobee::api::refresh_tokens();
+    let binding = ecobee::api::thermostat_status(); // This will either return a consistent mode (heat, cool, off) or "inconsistent".
+    let mut hvac_mode = binding.as_str();
+    println!("Initializing weather loop. Current hvac mode is {hvac_mode}");
+    loop {
+        match ureq::post("https://api.weatherapi.com/v1/current.json")
+        .query("key", weather_settings.api_key.as_ref().unwrap().as_str())
+        .query("q", weather_settings.query.as_ref().unwrap().as_str())
+        .call() {
+            Ok(response) => {
+                match response.into_json::<Value>() {
+                    Ok(doc) => {
+                        let temp: Option<f64> = if weather_settings.metric.unwrap() {
+                            doc["current"]["temp_c"].as_f64()
+                        } else { doc["current"]["temp_f"].as_f64() };
+                        match temp {
+                            Some(t) => { 
+                                let timestamp = chrono::offset::Local::now().to_rfc2822();
+                                println!("Checking temp ({t}) @ {timestamp}");
+
+                                // If the temp is above our thresholds, prioritize cooling, otherwise turn off, otherwise leave alone.
+                                if weather_settings.cool_above.is_some() && t > weather_settings.cool_above.unwrap() && hvac_mode != "cool" {
+                                    println!("Current temp: {t} current mode: {hvac_mode} - change @ {timestamp}");
+                                    ecobee::api::refresh_tokens();
+                                    ecobee::api::update_thermostats("cool");
+                                    hvac_mode = "cool";
+                                }
+                                else if weather_settings.off_above.is_some() && t > weather_settings.off_above.unwrap() && hvac_mode != "off" {
+
+                                }
+                                
+                                // If the temp is below our thresholds, prioritize heating, otherwise turn off, otherwise leave alone.
+                                if weather_settings.heat_below.is_some() && t < weather_settings.heat_below.unwrap() && hvac_mode != "heat" {
+                                    println!("Current temp: {t} current mode: {hvac_mode} - change @ {timestamp}");
+                                    ecobee::api::refresh_tokens();
+                                    ecobee::api::update_thermostats("heat");
+                                    hvac_mode = "heat";
+                                }
+                                else if weather_settings.off_below.is_some() && t < weather_settings.off_below.unwrap() && hvac_mode != "off" {
+
+                                }
+                            },
+                            _ => println!("No temperature found! Something went wrong with the temperature pulled from WeatherAPI: {temp:?}")
+                        }
+                    },
+                    Err(e) => println!("{e:?}")
+                }
+            },
+            Err(Error::Status(code, response)) => {
+                println!("Error with request for weather: {code} \n{}", response.into_string().unwrap());
+            }
+            Err(e) => { println!("Transport error: {e}") }
+        }
+        thread::sleep(duration);
+    }
+}

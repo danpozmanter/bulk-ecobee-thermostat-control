@@ -1,5 +1,5 @@
-use home;
-use serde_yaml;
+
+
 use std::fs;
 use std::fs::File;
 use std::io::Read;
@@ -7,12 +7,14 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::str::FromStr;
 
-use super::models::{Tokens, ThermostatMeta};
+use crate::ecobee::models::{Tokens, ThermostatMeta};
+use crate::weather::models::{WeatherSettings};
 
 static CONFIG_DIRECTORY: &str = ".bulk_ecobee_thermostat_control";
 static API_FILENAME: &str = "api_key";
 static TOKENS_FILENAME: &str = "api_tokens";
 static THERMOSTATS_FILENAME: &str = "thermostats.yaml";
+static WEATHER_FILENAME: &str = "weather.yaml";
 
 // NOTE: Functions in this file panic on error.
 
@@ -108,6 +110,38 @@ pub fn load_tokens() -> Tokens {
     Tokens { access_token: access_token.unwrap().to_string(), refresh_token: refresh_token.unwrap().to_string()}
 }
 
+/// # load_weather_settings() -> WeatherSettings
+/// 
+/// Load the thermostat metadata for all registered thermostats (identifier and name).
+pub fn load_weather_settings() -> WeatherSettings {
+    let mut file = match File::open(get_config_file_path(WEATHER_FILENAME)) {
+        Ok(f) => f,
+        Err(_) => { 
+            println!("Could not open weather settings file.");
+            return WeatherSettings{
+                api_key: None, 
+                query: None, 
+                metric: None,
+                heat_below: None, 
+                cool_above: None,
+                off_above: None,
+                off_below: None,
+                interval: None };
+        }
+    };
+    let mut contents = String::new();
+    
+    let content = match file.read_to_string(&mut contents) {
+        Ok(_) => contents,
+        Err(e) => { panic!("Error reading weather settings contents: {e}"); }
+    };
+
+    let weather_settings: WeatherSettings = serde_yaml::from_str(&content).unwrap();
+
+    weather_settings
+}
+
+
 /// # write_api_key(api_key: String)
 /// 
 /// Write the api_key entered by the user into local storage.
@@ -168,5 +202,26 @@ pub fn write_tokens(access_token: String, refresh_token: String) {
             }
         },
         Err(e) => panic!("Error writing access tokens {:?}", e.to_string())
+    }
+}
+
+/// # write_weather_settings(weather_settings: WeatherSettings)
+/// 
+/// Write the thermostat metadata into local storage for use during updates.
+pub fn write_weather_settings(weather_settings: WeatherSettings) {
+
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(get_config_file_path(WEATHER_FILENAME));
+    match file {
+        Ok(mut f) => {
+            match write!(f, "{}", serde_yaml::to_string(&weather_settings).unwrap()) {
+                Ok(_) => (),
+                Err(e) => panic!("Error writing thermostat metadata {:?}", e.to_string())
+            }
+        },
+        Err(e) => panic!("Error writing thermostat metadata {:?}", e.to_string())
     }
 }

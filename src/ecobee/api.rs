@@ -1,14 +1,33 @@
+use std::io;
 use std::str::FromStr;
+
 
 use serde_json::Value;
 use ureq;
 use ureq::Error;
 
 use crate::ecobee::models;
-use crate::ecobee::storage;
-use crate::ecobee::storage::write_thermostats;
+use crate::storage;
 
-use super::storage::load_thermostats;
+/// # api_key()
+/// 
+/// Get the API Key from the user, and store it locally for future use.
+/// Create the configuration directory if it doesn't yet exist (silently).
+pub fn api_key() {
+    println!("Enter your API Key from the Developer section of the Ecobee consumer portal: ");
+    let mut new_key = String::new();
+    io::stdin().read_line(&mut new_key).unwrap();
+    new_key.truncate(new_key.len() - 1);
+    println!("You entered {new_key}\nProceed? (y/n)");
+    let mut answer = String::new();
+    io::stdin().read_line(&mut answer).unwrap();
+    answer.truncate(answer.len() - 1);
+    if answer == "y" {
+        storage::create_config_dir();
+        storage::write_api_key(new_key);
+    }
+}
+
 
 /// # authorize()
 /// 
@@ -82,7 +101,7 @@ pub fn fetch_tokens(access_token: String, grant_type: &str) {
             println!("Error with request for tokens: {code}\n{}", response.into_string().unwrap());
         }
         Err(e) => { println!("Transport error: {e}") }
-        }
+    }
 
 }
 
@@ -117,9 +136,10 @@ pub fn refresh_tokens() {
 /// Refresh a local store with thermostat identifiers and names for use with the update function.
 /// 
 /// https://www.ecobee.com/home/developer/api/documentation/v1/operations/get-thermostats.shtml
-pub fn thermostat_status() {
+pub fn thermostat_status() -> String {
     let tokens = storage::load_tokens();
     let access = format!("Bearer {}", tokens.access_token.as_str());
+    let mut current_mode = String::new();
     match ureq::get("https://api.ecobee.com/1/thermostat")
     .set("Content-Type", "application/json;charset=UTF-8")
     .set("Authorization", access.as_str())    
@@ -139,11 +159,17 @@ pub fn thermostat_status() {
                             };
                             thermostats_meta_vec.push(thermostat_meta);
                             println!("Thermostat {} (id: {})", thermostat["name"], thermostat["identifier"]);
+                            let mode = thermostat["settings"]["hvacMode"].to_string();
+                            if !current_mode.is_empty() && current_mode != mode {
+                                current_mode = "inconsistent".to_string();
+                            } else {
+                                current_mode = mode;
+                            }
                             println!("HVAC Mode: {}", thermostat["settings"]["hvacMode"]);
                             let temp = thermostat["runtime"]["actualTemperature"].as_f64().unwrap() / 10.0;
                             println!("Actual Temperature: {}, Actual Humidity: {}%\n", temp, thermostat["runtime"]["actualHumidity"]);
                         }
-                        write_thermostats(thermostats_meta_vec);
+                        storage::write_thermostats(thermostats_meta_vec);
                         println!("=========================================");
                     }
                 },
@@ -155,6 +181,7 @@ pub fn thermostat_status() {
         }
         Err(e) => { println!("Transport error: {e}") }
     }
+    current_mode.replace("\"", "")
 }
 
 
@@ -172,7 +199,7 @@ pub fn thermostat_status() {
 pub fn update_thermostats(mode: &str) {
     let tokens = storage::load_tokens();
     let access = format!("Bearer {}", tokens.access_token.as_str());
-    let thermostats = load_thermostats();
+    let thermostats = storage::load_thermostats();
     for thermostat in thermostats {
         println!("Updating {} to {mode}", thermostat.name);
         match ureq::post("https://api.ecobee.com/1/thermostat")

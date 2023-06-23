@@ -1,8 +1,9 @@
 use clap::Parser;
-use chrono;
-use std::io;
+
 
 mod ecobee;
+mod storage;
+mod weather;
 
 /// # Args struct for Clap
 /// 
@@ -14,13 +15,19 @@ mod ecobee;
 #[command(author, version, about, long_about = None)]
 struct Args {
     #[arg(long, exclusive=true)]
-    apikey: bool,
+    key: bool,
     
     #[arg(long, exclusive=true)]
     pin: bool,
 
     #[arg(long, exclusive=true)]
     auth: bool,
+
+    #[arg(long, exclusive=true)]
+    weather_setup: bool,
+
+    #[arg(long, exclusive=true)]
+    weather: bool,
 
     #[arg(short, long)]
     refresh: bool,
@@ -46,21 +53,8 @@ fn main() {
     // Handle setup first,
 
     // Setup Step 1
-    if args.apikey {
-        // Get the API Key from the user, and store it locally for future use.
-        // Create the configuration directory if it doesn't yet exist (silently).
-        println!("Enter your API Key from the Developer section of the Ecobee consumer portal: ");
-        let mut api_key = String::new();
-        io::stdin().read_line(&mut api_key).unwrap();
-        api_key.truncate(api_key.len() - 1);
-        println!("You entered {api_key}\nProceed? (y/n)");
-        let mut answer = String::new();
-        io::stdin().read_line(&mut answer).unwrap();
-        answer.truncate(answer.len() - 1);
-        if answer == "y" {
-            ecobee::storage::create_config_dir();
-            ecobee::storage::write_api_key(api_key);
-        }
+    if args.key {
+        ecobee::api::api_key();
         return
     }
 
@@ -74,6 +68,20 @@ fn main() {
     if args.auth {
         ecobee::api::get_tokens_with_code();
         ecobee::api::thermostat_status(); // Get status, and refresh thermostat data locally.
+        return
+    }
+
+    // Weather Setup
+
+    if args.weather_setup {
+        weather::settings::setup();
+        return
+    }
+
+    // Weather Mode
+
+    if args.weather {
+        weather::api::run();
         return
     }
 

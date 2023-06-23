@@ -1,6 +1,6 @@
 [package]
 name = "bulk-ecobee-thermostat-control"
-version = "0.1.3"
+version = "0.2.1"
 edition = "2021"
 
 [dependencies]

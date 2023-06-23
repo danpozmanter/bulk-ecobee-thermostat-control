@@ -1,3 +1,6 @@
+0.2.1
+Weather setup fix.
+
 0.2.0
 Add weather mode (and validated weather_setup).
 Cleanup naming.

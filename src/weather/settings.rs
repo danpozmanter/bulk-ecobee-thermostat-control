@@ -125,9 +125,11 @@ fn validate(
             valid = false;
         }
     }
-    else if !(cool_above.unwrap() > off_below.unwrap() && off_below.unwrap() > heat_below.unwrap()) {
-        println!("ERROR: Cool Above > Off Below > Heat Below is not true.");
-        valid = false;
+    else if off_below.is_some() { 
+        if !(cool_above.unwrap() > off_below.unwrap() && off_below.unwrap() > heat_below.unwrap()) {
+            println!("ERROR: Cool Above > Off Below > Heat Below is not true.");
+            valid = false;
+        }
     }
     valid
 }

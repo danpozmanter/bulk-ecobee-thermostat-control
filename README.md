@@ -6,6 +6,9 @@ There's an [API](https://www.ecobee.com/home/developer/api/introduction/index.sh
 
 In combination with a scheduling tool like `at`, `cron`, or similar, it's easy to set a custom schedule.
 
+Alternatively you can now use **weather mode** after setting up a [weatherapi.com](https://www.weatherapi.com/) account.
+This mode will automatically change your hvac mode (cool, heat, off) based on the local weather and preset temperature thresholds.
+
 ### Stack
 
 * [Rust](https://www.rust-lang.org/)
@@ -123,7 +126,7 @@ Run the tool in the background, checking the weather and changing the hvac mode 
 To use weather mode, you will need to run:
 
 ```bash
-thermoctl --weather_setup
+thermoctl --weather-setup
 ```
 
 You will be prompted to enter your API key for [Weather API](https://www.weatherapi.com/) (or if you have one already, keep it the same).

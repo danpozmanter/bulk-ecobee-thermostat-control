@@ -181,7 +181,7 @@ pub fn thermostat_status() -> String {
         }
         Err(e) => { println!("Transport error: {e}") }
     }
-    current_mode.replace("\"", "")
+    current_mode.replace('"', "")
 }
 
 

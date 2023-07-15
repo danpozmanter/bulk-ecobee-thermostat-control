@@ -1,5 +1,5 @@
 
-
+use log::{info, error};
 use std::fs;
 use std::fs::File;
 use std::io::Read;
@@ -117,7 +117,7 @@ pub fn load_weather_settings() -> WeatherSettings {
     let mut file = match File::open(get_config_file_path(WEATHER_FILENAME)) {
         Ok(f) => f,
         Err(_) => { 
-            println!("Could not open weather settings file.");
+            error!("Could not open weather settings file.");
             return WeatherSettings{
                 api_key: None, 
                 query: None, 
@@ -155,7 +155,7 @@ pub fn write_api_key(api_key: String) {
     match file {
         Ok(mut f) => {
             match write!(f, "{api_key}") {
-                Ok(_) => println!("Successfully wrote api key."),
+                Ok(_) => info!("Successfully wrote api key."),
                 Err(e) => panic!("Error writing api key {:?}", e.to_string())
             }
         },

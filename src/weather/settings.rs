@@ -1,3 +1,4 @@
+use log::error;
 use std::io::{self, Write};
 use std::str::FromStr;
 use crate::storage;
@@ -86,48 +87,48 @@ fn validate(
 ) -> bool {
     let mut valid = true;
     if api_key.is_none() {
-        println!("ERROR: API Key unset.");
+        error!("API Key unset.");
         valid = false;
     }
     if interval.is_none() {
-        println!("ERROR: Interval unset.");
+        error!("Interval unset.");
         valid = false;
     }
     if query.is_none() {
-        println!("ERROR: Query unset.");
+        error!("Query unset.");
         valid = false;
     }
     if cool_above.is_none() {
-        println!("ERROR: Cool Above unset.");
+        error!("Cool Above unset.");
         valid = false;
     }
     if heat_below.is_none() {
-        println!("ERROR: Heat Below unset.");
+        error!("Heat Below unset.");
         valid = false;
     }
     if cool_above.unwrap() <= heat_below.unwrap() {
-        println!("ERROR: Setting Cool Above ({}) to less than or equal to Heat Below ({}).", cool_above.unwrap(), heat_below.unwrap());
+        error!("Setting Cool Above ({}) to less than or equal to Heat Below ({}).", cool_above.unwrap(), heat_below.unwrap());
         valid = false;
     }
     if interval.unwrap() < 1 {
-        println!("ERROR: Setting interval to less than every minute.");
+        error!("Setting interval to less than every minute.");
         valid = false;
     }
     if off_above.is_some() && off_below.is_some() {
         if !(cool_above.unwrap() > off_above.unwrap() && off_above.unwrap() > off_below.unwrap() && off_below.unwrap() > heat_below.unwrap()) {
-            println!("ERROR: Cool Above > Off Above > Off Below > Heat Below is not true.");
+            error!("Cool Above > Off Above > Off Below > Heat Below is not true.");
             valid = false;
         }
     }
     else if off_above.is_some() {
         if !(cool_above.unwrap() > off_above.unwrap() && off_above.unwrap() > heat_below.unwrap()) {
-            println!("ERROR: Cool Above > Off Above > Heat Below is not true.");
+            error!("Cool Above > Off Above > Heat Below is not true.");
             valid = false;
         }
     }
     else if off_below.is_some() { 
         if !(cool_above.unwrap() > off_below.unwrap() && off_below.unwrap() > heat_below.unwrap()) {
-            println!("ERROR: Cool Above > Off Below > Heat Below is not true.");
+            error!("Cool Above > Off Below > Heat Below is not true.");
             valid = false;
         }
     }

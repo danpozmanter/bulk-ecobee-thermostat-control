@@ -1,7 +1,6 @@
 use std::io;
 use std::str::FromStr;
-
-
+use log::{info, error};
 use serde_json::Value;
 use ureq;
 use ureq::Error;
@@ -52,13 +51,13 @@ pub fn authorize() {
                     println!("(expires in {} minutes)", auth.expires_in);
                     println!("Log into the Ecobee web portal and register the application using the PIN in your `My Apps` widget.");
                 },
-                Err(e) => println!("{e:?}")
+                Err(e) => error!("{e:?}")
             };
         },
         Err(Error::Status(code, response)) => {
-            println!("Error with request to authorize: {code}\n{}", response.into_string().unwrap());
+            error!("Error with request to authorize: {code}\n{}", response.into_string().unwrap());
         }
-        Err(e) => { println!("Transport error: {e}") }
+        Err(e) => { error!("Transport error: {e}") }
     }
 }
 
@@ -92,15 +91,15 @@ pub fn fetch_tokens(access_token: String, grant_type: &str) {
             match response.into_json::<models::TokenResponse>() {
                 Ok(tok) => {
                     storage::write_tokens(tok.access_token, tok.refresh_token);
-                    println!("Tokens retrieved successfully. Expires in {} minutes", tok.expires_in);
+                    info!("Tokens retrieved successfully. Expires in {} minutes", tok.expires_in);
                 },
-                Err(e) => println!("{e:?}")
+                Err(e) => error!("{e:?}")
             }
         },
         Err(Error::Status(code, response)) => {
-            println!("Error with request for tokens: {code}\n{}", response.into_string().unwrap());
+            error!("Error with request for tokens: {code}\n{}", response.into_string().unwrap());
         }
-        Err(e) => { println!("Transport error: {e}") }
+        Err(e) => { error!("Transport error: {e}") }
     }
 
 }
@@ -124,7 +123,7 @@ pub fn get_tokens_with_code() {
 pub fn refresh_tokens() {
     let tokens = storage::load_tokens();
 
-    println!("Refreshing tokens.");
+    info!("Refreshing tokens.");
 
     fetch_tokens(tokens.refresh_token, "refresh_token");
 }
@@ -167,19 +166,23 @@ pub fn thermostat_status() -> String {
                             }
                             println!("HVAC Mode: {}", thermostat["settings"]["hvacMode"]);
                             let temp = thermostat["runtime"]["actualTemperature"].as_f64().unwrap() / 10.0;
-                            println!("Actual Temperature: {}, Actual Humidity: {}%\n", temp, thermostat["runtime"]["actualHumidity"]);
+                            let desired_cool = thermostat["runtime"]["desiredCool"].as_f64().unwrap() / 10.0;
+                            let desired_heat = thermostat["runtime"]["desiredHeat"].as_f64().unwrap() / 10.0;
+                            println!("Actual Temperature: {}, Actual Humidity: {}%", temp, thermostat["runtime"]["actualHumidity"]);
+                            println!("Desired Cool: {}, Desired Heat: {}", desired_cool, desired_heat);
+                            println!("------------------");
                         }
                         storage::write_thermostats(thermostats_meta_vec);
                         println!("=========================================");
                     }
                 },
-                Err(e) => println!("{e:?}")
+                Err(e) => error!("{e:?}")
             };
         },
         Err(Error::Status(code, response)) => {
-            println!("Error with request for thermostats: {}\n{}", code, response.into_string().unwrap());
+            error!("Error with request for thermostats: {}\n{}", code, response.into_string().unwrap());
         }
-        Err(e) => { println!("Transport error: {e}") }
+        Err(e) => { error!("Transport error: {e}") }
     }
     current_mode.replace('"', "")
 }
@@ -219,15 +222,15 @@ pub fn update_thermostats(mode: &str) {
             Ok(response) => {
                 match response.into_string() {
                     Ok(resp) => {
-                        println!("{resp}");
+                        info!("{resp}");
                     },
-                    Err(e) => println!("{e:?}")
+                    Err(e) => error!("{e:?}")
                 };
             },
             Err(Error::Status(code, response)) => {
-                println!("Error with request for thermostats: {}\n{}", code, response.into_string().unwrap());
+                error!("Error with request for thermostats: {}\n{}", code, response.into_string().unwrap());
             }
-            Err(e) => { println!("Transport error: {e}") }
+            Err(e) => { error!("Transport error: {e}") }
         }
     }
 

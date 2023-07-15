@@ -1,5 +1,6 @@
 use chrono;
 use core::panic;
+use log::{info, error};
 use std::{thread, time};
 use serde_json::Value;
 use ureq;
@@ -21,7 +22,7 @@ pub fn run() {
     ecobee::api::refresh_tokens();
     let binding = ecobee::api::thermostat_status(); // This will either return a consistent mode (heat, cool, off) or "inconsistent".
     let mut hvac_mode = binding.as_str();
-    println!("Initializing weather loop. Current hvac mode is {hvac_mode}");
+    info!("Initializing weather loop. Current hvac mode is {hvac_mode}");
     loop {
         match ureq::post("https://api.weatherapi.com/v1/current.json")
         .query("key", weather_settings.api_key.as_ref().unwrap().as_str())
@@ -36,11 +37,11 @@ pub fn run() {
                         match temp {
                             Some(t) => { 
                                 let timestamp = chrono::offset::Local::now().to_rfc2822();
-                                println!("Checking temp ({t}) @ {timestamp}");
+                                info!("Checking temp ({t}) @ {timestamp}");
 
                                 // If the temp is above our thresholds, prioritize cooling, otherwise turn off, otherwise leave alone.
                                 if weather_settings.cool_above.is_some() && t > weather_settings.cool_above.unwrap() && hvac_mode != "cool" {
-                                    println!("Current temp: {t} current mode: {hvac_mode} - change @ {timestamp}");
+                                    info!("Current temp: {t} current mode: {hvac_mode} - change @ {timestamp}");
                                     ecobee::api::refresh_tokens();
                                     ecobee::api::update_thermostats("cool");
                                     hvac_mode = "cool";
@@ -51,7 +52,7 @@ pub fn run() {
                                 
                                 // If the temp is below our thresholds, prioritize heating, otherwise turn off, otherwise leave alone.
                                 if weather_settings.heat_below.is_some() && t < weather_settings.heat_below.unwrap() && hvac_mode != "heat" {
-                                    println!("Current temp: {t} current mode: {hvac_mode} - change @ {timestamp}");
+                                    info!("Current temp: {t} current mode: {hvac_mode} - change @ {timestamp}");
                                     ecobee::api::refresh_tokens();
                                     ecobee::api::update_thermostats("heat");
                                     hvac_mode = "heat";
@@ -60,16 +61,16 @@ pub fn run() {
 
                                 }
                             },
-                            _ => println!("No temperature found! Something went wrong with the temperature pulled from WeatherAPI: {temp:?}")
+                            _ => error!("No temperature found! Something went wrong with the temperature pulled from WeatherAPI: {temp:?}")
                         }
                     },
-                    Err(e) => println!("{e:?}")
+                    Err(e) => error!("{e:?}")
                 }
             },
             Err(Error::Status(code, response)) => {
-                println!("Error with request for weather: {code} \n{}", response.into_string().unwrap());
+                error!("Error with request for weather: {code} \n{}", response.into_string().unwrap());
             }
-            Err(e) => { println!("Transport error: {e}") }
+            Err(e) => { error!("Transport error: {e}") }
         }
         thread::sleep(duration);
     }

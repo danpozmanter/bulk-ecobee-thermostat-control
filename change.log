@@ -1,3 +1,8 @@
+0.3.0
+Display desired cool and heat settings.
+Switch over to logging.
+Allow controlling the verbosity of the command.
+
 0.2.1
 Weather setup fix.
 

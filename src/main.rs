@@ -1,4 +1,6 @@
 use clap::Parser;
+use simplelog::*;
+use log::info;
 
 
 mod ecobee;
@@ -14,6 +16,9 @@ mod weather;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+
+    // Setup & configuration arguments
+
     #[arg(long, exclusive=true)]
     key: bool,
     
@@ -26,7 +31,12 @@ struct Args {
     #[arg(long, exclusive=true)]
     weather_setup: bool,
 
-    #[arg(long, exclusive=true)]
+    // Normal runtime arguments
+
+    #[arg(short, long)]
+    verbose: bool,
+
+    #[arg(long, conflicts_with_all=["heat", "cool", "off", "refresh", "status"])]
     weather: bool,
 
     #[arg(short, long)]
@@ -35,20 +45,27 @@ struct Args {
     #[arg(short, long)]
     status: bool,
 
-    #[arg(long, conflicts_with_all=["heat", "off"])]
+    #[arg(long, conflicts_with_all=["heat", "off", "weather"])]
     cool: bool,
 
-    #[arg(long, conflicts_with_all=["cool", "off"])]
+    #[arg(long, conflicts_with_all=["cool", "off", "weather"])]
     heat: bool,
 
-    #[arg(long, conflicts_with_all=["cool", "heat"])]
+    #[arg(long, conflicts_with_all=["cool", "heat", "weather"])]
     off: bool,
 }
 
 fn main() {
     let args = Args::parse();
+    
+    let log_level = if args.verbose { LevelFilter::Info } else { LevelFilter::Error };
+    let log_config = ConfigBuilder::new()
+        .set_time_level(LevelFilter::Off)
+        .build();
 
-    println!("Bulk Ecobee Thermostat Control Run @ {}", chrono::offset::Local::now().to_rfc2822());
+    SimpleLogger::init(log_level, log_config).unwrap();
+
+    info!("Bulk Ecobee Thermostat Control Run @ {}", chrono::offset::Local::now().to_rfc2822());
 
     // Handle setup first,
 

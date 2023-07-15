@@ -23,6 +23,8 @@ This mode will automatically change your hvac mode (cool, heat, off) based on th
 
 * [Chrono](https://github.com/chronotope/chrono) - Date and time library for Rust.
 
+* [Log](https://docs.rs/log/latest/log/) & [SimpleLog](https://github.com/drakulix/simplelog.rs) - Logging.
+
 ### Setup and Installation
 
 Clone this repo, and run `cargo build --release`.

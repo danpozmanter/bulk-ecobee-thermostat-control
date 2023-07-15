@@ -72,6 +72,16 @@ an access token and a refresh token, as well as complete set up.
 thermoctl --auth
 ```
 
+#### Verbose
+
+Can be used with other commands.
+When active, additional info will be logged (output to stdout).
+
+```bash
+thermoctl --verbose
+thermoctl -v
+```
+
 #### Refresh
 
 Refresh tokens no longer expire for the Ecobee API (v1).

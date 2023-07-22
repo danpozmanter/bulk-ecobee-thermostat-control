@@ -1,7 +1,5 @@
 use std::io;
-use std::str::FromStr;
 use log::{info, error};
-use serde_json::Value;
 use ureq;
 use ureq::Error;
 
@@ -144,37 +142,35 @@ pub fn thermostat_status() -> String {
     .set("Authorization", access.as_str())    
     .query("json", "{\"selection\":{\"includeAlertsv\":\"true\",\"selectionType\":\"registered\",\"selectionMatch\":\"\",\"includeEvents\":\"true\",\"includeSettings\":\"true\",\"includeRuntime\":\"true\"}}").call() {
         Ok(response) => {
-            match response.into_json::<Value>() {
+            match response.into_json::<models::StatusResponse>() {
                 Ok(resp) => {
-                    if let Some(thermostats) = resp["thermostatList"].as_array() {
-                        println!("=========================================");
-                        println!("Thermostats");
-                        println!("=========================================");
-                        let mut thermostats_meta_vec: Vec<models::ThermostatMeta> = vec![];
-                        for thermostat in thermostats {
-                            let thermostat_meta = models::ThermostatMeta {
-                                identifier: String::from_str(thermostat["identifier"].as_str().unwrap()).unwrap(),
-                                name: String::from_str(thermostat["name"].as_str().unwrap()).unwrap()
-                            };
-                            thermostats_meta_vec.push(thermostat_meta);
-                            println!("Thermostat {} (id: {})", thermostat["name"], thermostat["identifier"]);
-                            let mode = thermostat["settings"]["hvacMode"].to_string();
-                            if !current_mode.is_empty() && current_mode != mode {
-                                current_mode = "inconsistent".to_string();
-                            } else {
-                                current_mode = mode;
-                            }
-                            println!("HVAC Mode: {}", thermostat["settings"]["hvacMode"]);
-                            let temp = thermostat["runtime"]["actualTemperature"].as_f64().unwrap() / 10.0;
-                            let desired_cool = thermostat["runtime"]["desiredCool"].as_f64().unwrap() / 10.0;
-                            let desired_heat = thermostat["runtime"]["desiredHeat"].as_f64().unwrap() / 10.0;
-                            println!("Actual Temperature: {}, Actual Humidity: {}%", temp, thermostat["runtime"]["actualHumidity"]);
-                            println!("Desired Cool: {}, Desired Heat: {}", desired_cool, desired_heat);
-                            println!("------------------");
+                    println!("=========================================");
+                    println!("Thermostats");
+                    println!("=========================================");
+                    let mut thermostats_meta_vec: Vec<models::ThermostatMeta> = vec![];
+                    for thermostat in resp.thermostats {
+                        let thermostat_meta = models::ThermostatMeta {
+                            identifier: thermostat.identifier,
+                            name: thermostat.name
+                        };
+                        thermostats_meta_vec.push(thermostat_meta.clone());
+                        println!("Thermostat {} (id: {})", thermostat_meta.name, thermostat_meta.identifier);
+                        println!("HVAC Mode: {}", thermostat.settings.hvac_mode);
+                        let mode = thermostat.settings.hvac_mode;
+                        if !current_mode.is_empty() && current_mode != mode {
+                            current_mode = "inconsistent".to_string();
+                        } else {
+                            current_mode = mode;
                         }
-                        storage::write_thermostats(thermostats_meta_vec);
-                        println!("=========================================");
+                        let temp = thermostat.runtime.actual_temperature / 10.0;
+                        let desired_cool = thermostat.runtime.desired_cool / 10.0;
+                        let desired_heat = thermostat.runtime.desired_heat / 10.0;
+                        println!("Actual Temperature: {}, Actual Humidity: {}%", temp, thermostat.runtime.actual_humidity);
+                        println!("Desired Cool: {}, Desired Heat: {}", desired_cool, desired_heat);
+                        println!("------------------");
                     }
+                    storage::write_thermostats(thermostats_meta_vec);
+                    println!("=========================================");
                 },
                 Err(e) => error!("{e:?}")
             };

@@ -2,11 +2,11 @@ use chrono;
 use core::panic;
 use log::{info, error};
 use std::{thread, time};
-use serde_json::Value;
 use ureq;
 use ureq::Error;
 use crate::storage;
 use crate::ecobee;
+use crate::weather::models;
 
 /// # run()
 /// 
@@ -29,11 +29,11 @@ pub fn run() {
         .query("q", weather_settings.query.as_ref().unwrap().as_str())
         .call() {
             Ok(response) => {
-                match response.into_json::<Value>() {
-                    Ok(doc) => {
+                match response.into_json::<models::WeatherResponse>() {
+                    Ok(resp) => {
                         let temp: Option<f64> = if weather_settings.metric.unwrap() {
-                            doc["current"]["temp_c"].as_f64()
-                        } else { doc["current"]["temp_f"].as_f64() };
+                            resp.current.temp_c
+                        } else { resp.current.temp_f };
                         match temp {
                             Some(t) => { 
                                 let timestamp = chrono::offset::Local::now().to_rfc2822();

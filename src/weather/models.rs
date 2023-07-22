@@ -1,6 +1,19 @@
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Debug)]
+pub struct WeatherResponse {
+
+    pub current: WeatherResponseCurrent,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct WeatherResponseCurrent {
+
+    pub temp_c: Option<f64>,
+    pub temp_f: Option<f64>
+}
+
 /// # WeatherSettings
 /// 
 /// For storing/retrieving Weather API settings and usage settings for Weather Mode.

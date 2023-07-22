@@ -10,13 +10,52 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Debug)]
 pub struct AuthorizeResponse {
     #[serde(rename="ecobeePin")]
-    pub ecobee_pin: String,  // Matches json
+    pub ecobee_pin: String,
     pub expires_in: u32,
     pub code: String,
     pub scope: String,
     pub interval: u32
 }
 
+
+/// # StatusResponse
+/// 
+/// ecobeePin   The PIN a user enters in the web portal.
+/// expires_in  The number of minutes until the PIN expires. Ensure you inform the user how much time they have.
+/// code        The authorization token needed to request the access and refresh tokens.
+/// scope       The requested Scope from the original request. This must match the original request.
+/// interval    The minimum amount of seconds which must pass between polling attempts for a token. */
+#[derive(Deserialize, Debug)]
+pub struct StatusResponse {
+    #[serde(rename="thermostatList")]
+    pub thermostats: Vec<StatusResponseThermostat>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct StatusResponseThermostatRuntime {
+    #[serde(rename="actualHumidity")]
+    pub actual_humidity: f64,
+    #[serde(rename="actualTemperature")]
+    pub actual_temperature: f64,
+    #[serde(rename="desiredCool")]
+    pub desired_cool: f64,
+    #[serde(rename="desiredHeat")]
+    pub desired_heat: f64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct StatusResponseThermostatSettings {
+    #[serde(rename="hvacMode")]
+    pub hvac_mode: String
+}
+
+#[derive(Deserialize, Debug)]
+pub struct StatusResponseThermostat {
+    pub identifier: String,
+    pub name: String,
+    pub settings: StatusResponseThermostatSettings,
+    pub runtime: StatusResponseThermostatRuntime
+}
 
 ///  # TokenResponse
 /// 
@@ -47,7 +86,7 @@ pub struct Tokens {
 /// # ThermostatMeta
 /// 
 /// For storing/retrieving basic thermostat metadata (identifier and name).
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Clone, Deserialize, Debug, Serialize)]
 pub struct ThermostatMeta {
 
     pub identifier: String,

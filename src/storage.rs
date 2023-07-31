@@ -1,5 +1,5 @@
 
-use log::{info, error};
+use log::{debug, error};
 use std::fs;
 use std::fs::File;
 use std::io::Read;
@@ -155,7 +155,7 @@ pub fn write_api_key(api_key: String) {
     match file {
         Ok(mut f) => {
             match write!(f, "{api_key}") {
-                Ok(_) => info!("Successfully wrote api key."),
+                Ok(_) => debug!("Successfully wrote api key."),
                 Err(e) => panic!("Error writing api key {:?}", e.to_string())
             }
         },

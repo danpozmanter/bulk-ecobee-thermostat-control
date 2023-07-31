@@ -1,6 +1,6 @@
 [package]
 name = "bulk-ecobee-thermostat-control"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 
 [dependencies]
@@ -12,5 +12,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 simplelog = "0.12.1"
+time = "0.3.24"
 ureq = { version = "2.6.2", features = ["json", "charset"] }
 

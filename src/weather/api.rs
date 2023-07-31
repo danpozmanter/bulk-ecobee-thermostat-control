@@ -1,6 +1,6 @@
 use chrono;
 use core::panic;
-use log::{info, error};
+use log::{debug, info, error};
 use std::{thread, time};
 use ureq;
 use ureq::Error;
@@ -22,7 +22,7 @@ pub fn run() {
     ecobee::api::refresh_tokens();
     let binding = ecobee::api::thermostat_status(); // This will either return a consistent mode (heat, cool, off) or "inconsistent".
     let mut hvac_mode = binding.as_str();
-    info!("Initializing weather loop. Current hvac mode is {hvac_mode}");
+    debug!("Initializing weather loop. Current hvac mode is {hvac_mode}");
     loop {
         match ureq::post("https://api.weatherapi.com/v1/current.json")
         .query("key", weather_settings.api_key.as_ref().unwrap().as_str())

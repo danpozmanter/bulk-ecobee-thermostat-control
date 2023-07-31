@@ -72,14 +72,18 @@ an access token and a refresh token, as well as complete set up.
 thermoctl --auth
 ```
 
-#### Verbose
+#### Verbose || Debug
 
 Can be used with other commands.
-When active, additional info will be logged (output to stdout).
+If debug is specified, the log level will include debugging information. (`Debug`).
+Otherwise, if verbose is specified, info logs will be included. (`Info`).
+The default (neither specified) will set logging to `Error`.
 
 ```bash
 thermoctl --verbose
 thermoctl -v
+thermoctl --debug
+thermoctl -d
 ```
 
 #### Refresh

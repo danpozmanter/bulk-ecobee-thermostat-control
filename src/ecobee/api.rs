@@ -1,5 +1,6 @@
+use chrono::Local;
+use log::{debug, info, error};
 use std::io;
-use log::{info, error};
 use ureq;
 use ureq::Error;
 
@@ -89,7 +90,7 @@ pub fn fetch_tokens(access_token: String, grant_type: &str) {
             match response.into_json::<models::TokenResponse>() {
                 Ok(tok) => {
                     storage::write_tokens(tok.access_token, tok.refresh_token);
-                    info!("Tokens retrieved successfully. Expires in {} minutes", tok.expires_in);
+                    debug!("Tokens retrieved successfully. Expires in {} minutes", tok.expires_in);
                 },
                 Err(e) => error!("{e:?}")
             }
@@ -110,7 +111,7 @@ pub fn fetch_tokens(access_token: String, grant_type: &str) {
 pub fn get_tokens_with_code() {
     let tokens = storage::load_tokens();
 
-    println!("Requesting access tokens after registering app with PIN");
+    info!("Requesting access tokens after registering app with PIN");
 
     fetch_tokens(tokens.access_token, "ecobeePin");
 }
@@ -121,7 +122,7 @@ pub fn get_tokens_with_code() {
 pub fn refresh_tokens() {
     let tokens = storage::load_tokens();
 
-    info!("Refreshing tokens.");
+    debug!("Refreshing tokens.");
 
     fetch_tokens(tokens.refresh_token, "refresh_token");
 }
@@ -144,9 +145,7 @@ pub fn thermostat_status() -> String {
         Ok(response) => {
             match response.into_json::<models::StatusResponse>() {
                 Ok(resp) => {
-                    println!("=========================================");
-                    println!("Thermostats");
-                    println!("=========================================");
+                    println!("\nThermostats\n");
                     let mut thermostats_meta_vec: Vec<models::ThermostatMeta> = vec![];
                     for thermostat in resp.thermostats {
                         let thermostat_meta = models::ThermostatMeta {
@@ -166,11 +165,9 @@ pub fn thermostat_status() -> String {
                         let desired_cool = thermostat.runtime.desired_cool / 10.0;
                         let desired_heat = thermostat.runtime.desired_heat / 10.0;
                         println!("Actual Temperature: {}, Actual Humidity: {}%", temp, thermostat.runtime.actual_humidity);
-                        println!("Desired Cool: {}, Desired Heat: {}", desired_cool, desired_heat);
-                        println!("------------------");
+                        println!("Desired Cool: {}, Desired Heat: {}\n", desired_cool, desired_heat);
                     }
                     storage::write_thermostats(thermostats_meta_vec);
-                    println!("=========================================");
                 },
                 Err(e) => error!("{e:?}")
             };
@@ -200,7 +197,7 @@ pub fn update_thermostats(mode: &str) {
     let access = format!("Bearer {}", tokens.access_token.as_str());
     let thermostats = storage::load_thermostats();
     for thermostat in thermostats {
-        println!("Updating {} to {mode}", thermostat.name);
+        println!("Updating {} to {mode} @ {}", thermostat.name, Local::now().to_rfc2822());
         match ureq::post("https://api.ecobee.com/1/thermostat")
         .set("Content-Type", "application/json;charset=UTF-8")
         .set("Authorization", access.as_str())    
@@ -218,7 +215,7 @@ pub fn update_thermostats(mode: &str) {
             Ok(response) => {
                 match response.into_string() {
                     Ok(resp) => {
-                        info!("{resp}");
+                        debug!("{resp}");
                     },
                     Err(e) => error!("{e:?}")
                 };

@@ -1,6 +1,8 @@
+use chrono::Local;
 use clap::Parser;
-use simplelog::*;
 use log::info;
+use simplelog::*;
+use time::UtcOffset;
 
 
 mod ecobee;
@@ -36,6 +38,9 @@ struct Args {
     #[arg(short, long)]
     verbose: bool,
 
+    #[arg(short, long)]
+    debug: bool,
+
     #[arg(long, conflicts_with_all=["heat", "cool", "off", "refresh", "status"])]
     weather: bool,
 
@@ -57,15 +62,24 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    
-    let log_level = if args.verbose { LevelFilter::Info } else { LevelFilter::Error };
-    let log_config = ConfigBuilder::new()
-        .set_time_level(LevelFilter::Off)
-        .build();
+
+    let log_level = if args.debug { LevelFilter::Debug } else if args.verbose { LevelFilter::Info } else { LevelFilter::Error };
+    let offset_in_sec = Local::now().offset().local_minus_utc();
+    let utc_offset = UtcOffset::from_whole_seconds(offset_in_sec);
+    let log_config = match utc_offset {
+        Ok(offset) => {
+            ConfigBuilder::new()
+            .set_time_offset(offset)
+            .build()
+        }
+        Err(_) => {
+            ConfigBuilder::new().build()
+        }
+    };
 
     SimpleLogger::init(log_level, log_config).unwrap();
 
-    info!("Bulk Ecobee Thermostat Control Run @ {}", chrono::offset::Local::now().to_rfc2822());
+    info!("Bulk Ecobee Thermostat Control Run @ {}", Local::now().to_rfc2822());
 
     // Handle setup first,
 

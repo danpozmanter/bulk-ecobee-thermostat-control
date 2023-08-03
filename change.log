@@ -1,3 +1,9 @@
+0.3.3
+Adding --check-weather command.
+Always output start time and check duration for --weather.
+Bugfix - implement "off" hvac mode logic.
+Light refactoring in weather api code.
+
 0.3.2
 Adding local timestamps to logging.
 Adding debug mode.

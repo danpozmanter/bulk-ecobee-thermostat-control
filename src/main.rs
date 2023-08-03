@@ -44,6 +44,9 @@ struct Args {
     #[arg(long, conflicts_with_all=["heat", "cool", "off", "refresh", "status"])]
     weather: bool,
 
+    #[arg(long)]
+    check_weather: bool,
+
     #[arg(short, long)]
     refresh: bool,
 
@@ -124,6 +127,10 @@ fn main() {
 
     if args.status {
         ecobee::api::thermostat_status();
+    }
+
+    if args.check_weather {
+        weather::api::check();
     }
 
     // If an argument to change the hvac mode is present, apply it and exit.

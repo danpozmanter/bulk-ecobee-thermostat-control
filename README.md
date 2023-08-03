@@ -186,6 +186,12 @@ auto:ip IP lookup e.g: auto:ip
 IP address (IPv4 and IPv6 supported) e.g: 100.0.0.1
 ```
 
+```bash
+thermoctl --check-weather
+```
+
+Hits the weather API, and outputs the results.
+
 ### General Notes
 
 Be mindful not to spam the endpoints. The "--status" command uses the /thermostat endpoint, which explicitly asks not to be used for polling.

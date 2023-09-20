@@ -88,9 +88,8 @@ thermoctl -d
 
 #### Refresh
 
-Refresh tokens no longer expire for the Ecobee API (v1).
-This command can be run in tandem with cool, heat, or off.
-It will always execute first.
+Manually refresh tokens no longer expire for the Ecobee API (v1).
+This command will be run automatically for weather mode, and for heat/cool/off.
 
 ```bash
 thermoctl --refresh

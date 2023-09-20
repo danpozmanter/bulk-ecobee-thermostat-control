@@ -1,3 +1,6 @@
+0.3.4:
+Convenience: Automatically refresh the access token before manually changing the thermostat mode.
+
 0.3.3
 Adding --check-weather command.
 Always output start time and check duration for --weather.

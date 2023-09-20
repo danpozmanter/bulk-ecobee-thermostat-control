@@ -136,16 +136,19 @@ fn main() {
     // If an argument to change the hvac mode is present, apply it and exit.
 
     if args.cool {
+        ecobee::api::refresh_tokens();
         ecobee::api::update_thermostats("cool");
         return
     }
 
-    if args.heat {        
+    if args.heat {
+        ecobee::api::refresh_tokens();
         ecobee::api::update_thermostats("heat");
         return
     }
 
     if args.off {
+        ecobee::api::refresh_tokens();
         ecobee::api::update_thermostats("off");
     }
 }
